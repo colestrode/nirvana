@@ -35,7 +35,7 @@ function init(controller, connectedBot) {
       })
       .catch(function(err) {
         controller.log(err);
-        bot.reply(message, 'Sorry, I\'m not sure who ' + usernameOrId + ' is :frown:');
+        bot.reply(message, 'Sorry, I\'m not sure who ' + usernameOrId + ' is :upside_down_face:');
       });
   });
 
@@ -48,7 +48,7 @@ function init(controller, connectedBot) {
       })
       .catch(function(err) {
         controller.log(err);
-        bot.reply(message, 'Sorry, I\'m not sure who ' + usernameOrId + ' is :frown:');
+        bot.reply(message, 'Sorry, I\'m not sure who ' + usernameOrId + ' is :upside_down_face:');
       });
   });
 
@@ -84,16 +84,18 @@ function getUserId(bot, usernameOrId) {
     return q(usernameOrId.replace('<@', '').replace('>', ''));
   }
 
-  if (userNameCache[usernameOrId]) {
-    return q(userNameCache[usernameOrId]);
+  var username = usernameOrId.toLowerCase();
+
+  if (userNameCache[username]) {
+    return q(userNameCache[username]);
   }
 
   return populateCache(bot)
     .then(function() {
-      var userId = userNameCache[usernameOrId];
+      var userId = userNameCache[username];
 
       if (!userId) {
-        throw new Error('user ' + usernameOrId + ' not found');
+        throw new Error('user ' + username + ' not found');
       }
 
       return userId;
