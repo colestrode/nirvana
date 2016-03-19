@@ -1,9 +1,8 @@
-# SK-Nirvana
+# sk-nirvana
 [![Build Status](https://travis-ci.org/colestrode/sk-nirvana.svg?branch=master)](https://travis-ci.org/colestrode/sk-nirvana)
 [![Coverage Status](https://coveralls.io/repos/github/colestrode/sk-nirvana/badge.svg?branch=master)](https://coveralls.io/github/colestrode/sk-nirvana?branch=master)
 
-A Skellington karma bot where things only get better.
-
+A [Skellington](https://github.com/colestrode/skellington) karma bot where things only get better.
 
 ## Awarding karma
 
