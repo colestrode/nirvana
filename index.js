@@ -8,14 +8,14 @@ module.exports = {
 };
 
 function init(controller, connectedBot) {
-  storage = require('botkit-promise-storage')(controller);
+  var initPromise = populateCache(connectedBot);
 
-  populateCache(connectedBot);
+  storage = require('botkit-promise-storage')(controller);
 
   controller.hears('^(.*)\\+\\+$', 'ambient', function(bot, message) {
     var usernameOrId = message.match[1];
 
-    getUser(bot, usernameOrId)
+    return getUser(bot, usernameOrId)
       .then(function(user) {
         if (user.id === message.user) {
           return bot.reply(message, 'tsk tsk tsk, you can\'t give karma to yourself :smirk_cat:');
@@ -42,7 +42,7 @@ function init(controller, connectedBot) {
   controller.hears('^karma (.*)', 'direct_message,direct_mention', function(bot, message) {
     var usernameOrId = message.match[1];
 
-    getUser(bot, usernameOrId, false)
+    return getUser(bot, usernameOrId, false)
       .then(function(user) {
         bot.reply(message, '<@' + user.id + '> has ' + user.karma + ' karma');
       })
@@ -51,8 +51,13 @@ function init(controller, connectedBot) {
         bot.reply(message, 'Sorry, I\'m not sure who ' + usernameOrId + ' is :frown:');
       });
   });
+
+  return initPromise;
 }
 
+/**
+ * Returns a user object with at least an id and karma keys. Karma will be an integer.
+ */
 function getUser(bot, userNameOrId) {
   return getUserId(bot, userNameOrId)
     .then(function(userId) {
@@ -73,23 +78,22 @@ function getUser(bot, userNameOrId) {
 
 /**
  * Given either a Slack identified user string, e.g., <@UABC123>, or a bare user name, e.g., johnstamos,
- *
  */
-function getUserId(bot, user) {
-  if (/^<@U[A-Z0-9]*>$/.test(user)) {
-    return q(user.replace('<@', '').replace('>', ''));
+function getUserId(bot, usernameOrId) {
+  if (/^<@U[A-Z0-9]*>$/.test(usernameOrId)) {
+    return q(usernameOrId.replace('<@', '').replace('>', ''));
   }
 
-  if (userNameCache[user]) {
-    return q(userNameCache[user]);
+  if (userNameCache[usernameOrId]) {
+    return q(userNameCache[usernameOrId]);
   }
 
   return populateCache(bot)
     .then(function() {
-      var userId = userNameCache[user];
+      var userId = userNameCache[usernameOrId];
 
       if (!userId) {
-        throw new Error('user ' + user + ' not found');
+        throw new Error('user ' + usernameOrId + ' not found');
       }
 
       return userId;
@@ -98,7 +102,6 @@ function getUserId(bot, user) {
 
 /**
  * Populates the userNameCache
- * @param bot
  */
 function populateCache(bot) {
   var usersList = q.nbind(bot.api.users.list, bot.api.users);
@@ -110,11 +113,14 @@ function populateCache(bot) {
       }
 
       userNameCache = {};
-
       data.members.forEach(function(user) {
         userNameCache[user.name] = user.id;
       });
 
       return userNameCache;
+    })
+    .catch(function(err) {
+      // fail silently
+      console.log('Error updating nirvana user cache', err);
     });
 }
